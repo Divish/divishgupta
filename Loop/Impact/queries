@@ -1,0 +1,32 @@
+import MySQLdb
+
+mysql_cn = MySQLdb.connect(host='localhost', port=3306, user='root',
+                           passwd='root',
+                           db='digitalgreen',
+                           charset='utf8',
+                           use_unicode=True)
+
+def onrun_query(query):
+    cursor = mysql_cn.cursor()
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
+
+
+# (Date, Aggregator ID, Market ID, Quantity, Vehicle Type, Transport Cost)
+# Quantity is total quantity for date-aggregator-market combination even if multiple vehicles were taken.
+
+aggregator_vehicle_market_data_query = 'SELECT ' \
+'   dt.date, ' \
+'   dt.user_created_id, ' \
+'   dt.mandi_id, ' \
+'   SUM(ct.quantity), ' \
+'   tv.vehicle_id, ' \
+'   dt.transportation_cost ' \
+'FROM loop_daytransportation dt LEFT JOIN ' \
+    'loop_combinedtransaction ct ON ct.date = dt.date ' \
+    'AND ct.user_created_id = dt.user_created_id AND ct.mandi_id = dt.mandi_id ' \
+    'LEFT JOIN loop_transportationvehicle tv ON dt.transportation_vehicle_id = tv.id ' \
+'GROUP BY dt.id ORDER BY dt.date, dt.user_created_id, dt.mandi_id' \
+
+aggregator_vehicle_market_data_query_result = onrun_query(aggregator_vehicle_market_data_query)
